@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypothesis Testing Practice Tool — STAT C1000</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── BASE VARIABLES ── */
+:root {
+  --teal:#1D9E75;--teal-lt:#E1F5EE;--teal-mid:#5DCAA5;--teal-dk:#0F6E56;
+  --blue:#378ADD;--blue-lt:#E6F1FB;--blue-mid:#85B7EB;--blue-dk:#185FA5;
+  --amber:#BA7517;--amber-lt:#FAEEDA;--amber-mid:#EF9F27;
+  --purple:#534AB7;--purple-lt:#EEEDFE;--purple-mid:#AFA9EC;--purple-dk:#3C3489;
+  --coral-lt:#FAECE7;--coral-mid:#F0997B;--coral-dk:#993C1D;
+  --green-lt:#EAF3DE;--green-dk:#3B6D11;
+  --border:#e2e8f0;--bg:#f8fafc;--surface:#ffffff;
+  --text:#1a202c;--text-muted:#64748b;
+  --radius:8px;--radius-lg:12px;
+  /* presentation scaling */
+  --base-font:14px;
+  --card-pad:1.1rem 1.25rem;
+  --formula-size:15px;
+  --step-font:13px;
+  --hyp-size:14px;
+  --scenario-size:13px;
+}
+
+/* ── PRESENTATION OVERRIDES ── */
+body.present {
+  --base-font:18px;
+  --card-pad:1.4rem 1.6rem;
+  --formula-size:22px;
+  --step-font:17px;
+  --hyp-size:20px;
+  --scenario-size:17px;
+  --radius:10px;--radius-lg:16px;
+}
+body.present .container { max-width:1020px; padding:1.5rem 2rem; }
+body.present .tab-btn   { font-size:16px; padding:12px 24px; }
+body.present .type-card { padding:1.4rem 1.6rem; }
+body.present .tc-title  { font-size:18px; }
+body.present .tc-sub    { font-size:14px; }
+body.present .intro     { font-size:16px; }
+body.present .nav-row span { font-size:16px; }
+body.present .btn       { font-size:16px; padding:11px 20px; }
+body.present .btn.choice{ font-size:17px; padding:14px 22px; }
+body.present .btn-nav   { font-size:15px; padding:10px 18px; }
+body.present .step-name { font-size:16px; }
+body.present .step-badge{ width:28px;height:28px;font-size:13px; }
+body.present .card-label{ font-size:11px; }
+body.present .alert     { font-size:16px; }
+body.present .conc-opt  { font-size:16px; padding:13px 18px; }
+body.present .formula-box{ font-size:var(--formula-size) !important; }
+body.present pre.work   { font-size:15px; line-height:1.8; padding:14px 16px; }
+body.present .cond-list li{ font-size:15px; padding:5px 0; }
+body.present .dot       { width:8px;height:8px;margin-top:8px; }
+body.present .hyp-box   { font-size:var(--hyp-size); line-height:2.2; padding:16px 20px; }
+body.present .reject-box,
+body.present .ftr-box   { font-size:16px; padding:1rem 1.25rem; }
+
+/* ── GLOBAL RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;font-size:var(--base-font);transition:font-size .2s;}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;position:sticky;top:0;z-index:100;}
+.hdr-left{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+.hdr-badge{background:var(--purple-lt);color:var(--purple-dk);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+header h1{font-size:16px;font-weight:600;}
+header p{font-size:12px;color:var(--text-muted);margin-top:1px;}
+
+/* ── PRESENT TOGGLE ── */
+.present-toggle{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:6px 14px;cursor:pointer;font-size:13px;font-family:'Inter',sans-serif;font-weight:500;color:var(--text);transition:all .15s;white-space:nowrap;}
+.present-toggle:hover{border-color:#94a3b8;}
+.present-toggle.active{background:var(--purple-lt);border-color:var(--purple);color:var(--purple-dk);}
+.toggle-icon{font-size:15px;}
+body.present header{padding:1.25rem 2.5rem;}
+body.present header h1{font-size:20px;}
+body.present header p{font-size:14px;}
+body.present .present-toggle{font-size:15px;padding:8px 18px;}
+body.present .hdr-badge{font-size:12px;}
+
+/* ── LAYOUT ── */
+.container{max-width:880px;margin:0 auto;padding:2rem 1.5rem;transition:max-width .2s,padding .2s;}
+.tab-bar{display:flex;border-bottom:1.5px solid var(--border);margin-bottom:1.75rem;flex-wrap:wrap;}
+.tab-btn{background:none;border:none;border-bottom:2.5px solid transparent;padding:10px 18px;margin-bottom:-1.5px;font-size:13px;font-family:'Inter',sans-serif;font-weight:500;color:var(--text-muted);cursor:pointer;transition:color .15s,border-color .15s;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.on{border-bottom-color:var(--text);color:var(--text);}
+.sec{display:none;}.sec.on{display:block;}
+.intro{font-size:var(--base-font);color:var(--text-muted);margin-bottom:1.1rem;line-height:1.6;}
+
+/* ── TYPE CARDS ── */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;}
+.type-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--card-pad);cursor:pointer;text-align:left;width:100%;font-family:'Inter',sans-serif;transition:border-color .15s,background .15s;}
+.type-card:hover{border-color:#94a3b8;}
+.type-card.sel-z{border:2px solid var(--teal);background:var(--teal-lt);}
+.type-card.sel-t{border:2px solid var(--blue);background:var(--blue-lt);}
+.tc-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.tc-title{font-size:15px;font-weight:600;color:var(--text);}
+.tc-sub{font-size:12px;margin-top:5px;}
+.tc-sub.z{color:var(--teal);}.tc-sub.t{color:var(--blue);}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);margin:8px 0;}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0;}
+.card-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:block;}
+.card.accent-z{border-left:3px solid var(--teal);border-radius:0 var(--radius) var(--radius) 0;}
+.card.accent-t{border-left:3px solid var(--blue);border-radius:0 var(--radius) var(--radius) 0;}
+.card.accent-p{border-left:3px solid var(--purple);border-radius:0 var(--radius) var(--radius) 0;}
+.card.bg-subtle{background:var(--bg);}
+
+/* ── STEP CARDS ── */
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);margin-top:8px;}
+.step-card.step-z{border-left:2px solid var(--teal-mid);border-radius:0 var(--radius) var(--radius) 0;}
+.step-card.step-t{border-left:2px solid var(--blue-mid);border-radius:0 var(--radius) var(--radius) 0;}
+.step-head{display:flex;align-items:center;margin-bottom:8px;}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:12px;font-weight:600;margin-right:10px;flex-shrink:0;}
+.badge-z{background:var(--teal-lt);color:var(--teal-dk);}
+.badge-t{background:var(--blue-lt);color:var(--blue-dk);}
+.step-name{font-size:var(--step-font);font-weight:600;color:var(--text);}
+
+/* ── PRE / FORMULA ── */
+pre.work{font-family:'JetBrains Mono',monospace;font-size:var(--step-font);color:var(--text-muted);background:var(--bg);border-radius:var(--radius);padding:12px 14px;white-space:pre-wrap;line-height:1.75;margin:0;}
+.formula-box{background:var(--bg);border-radius:var(--radius);padding:10px 14px;font-size:var(--formula-size);font-weight:600;color:var(--text);margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
+
+/* ── NAVIGATION ── */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.nav-row span{font-size:var(--step-font);color:var(--text-muted);}
+.btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px;font-size:var(--step-font);font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;transition:background .12s,border-color .12s;}
+.btn:hover{background:var(--bg);border-color:#94a3b8;}
+.btn:disabled{opacity:.4;cursor:default;}
+.btn.choice{padding:11px 20px;font-size:var(--step-font);}
+.btn.choice.ok{border-color:var(--teal);background:var(--teal-lt);color:var(--teal-dk);font-weight:600;}
+.btn.choice.no{border-color:var(--coral-mid);background:var(--coral-lt);color:var(--coral-dk);}
+.btn-row{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;}
+.btn-nav{padding:8px 16px;}
+
+/* ── ALERTS ── */
+.alert{border-radius:var(--radius);padding:.8rem 1rem;font-size:var(--step-font);margin:8px 0;line-height:1.55;}
+.alert-ok   {background:var(--teal-lt);  border:1px solid var(--teal-mid);  color:var(--teal-dk);}
+.alert-hint {background:var(--coral-lt); border:1px solid var(--coral-mid); color:var(--coral-dk);}
+.alert-info {background:var(--amber-lt); border:1px solid var(--amber-mid); color:var(--amber);}
+.alert-purple{background:var(--purple-lt);border:1px solid var(--purple-mid);color:var(--purple-dk);}
+
+/* ── MISC ── */
+.cond-list{list-style:none;}
+.cond-list li{display:flex;align-items:flex-start;gap:8px;font-size:var(--step-font);color:var(--text-muted);padding:4px 0;}
+.dot{width:6px;height:6px;border-radius:50%;margin-top:7px;flex-shrink:0;}
+.dot-z{background:var(--teal);}.dot-t{background:var(--blue);}
+.hyp-box{font-family:'JetBrains Mono',monospace;font-size:var(--hyp-size);background:var(--bg);border-radius:var(--radius);padding:12px 16px;line-height:2.1;}
+.reject-box{background:var(--coral-lt);border:1px solid var(--coral-mid);border-radius:var(--radius);padding:.85rem 1.1rem;font-size:var(--step-font);color:var(--coral-dk);}
+.ftr-box{background:var(--green-lt);border:1px solid var(--teal-mid);border-radius:var(--radius);padding:.85rem 1.1rem;font-size:var(--step-font);color:var(--green-dk);}
+.conc-opt{display:block;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 16px;font-size:var(--step-font);font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;text-align:left;margin-bottom:6px;transition:border-color .12s,background .12s;line-height:1.5;}
+.conc-opt:hover{border-color:#94a3b8;background:var(--bg);}
+.conc-opt.right{border-color:var(--teal);background:var(--teal-lt);color:var(--teal-dk);font-weight:500;pointer-events:none;}
+.conc-opt.wrong{border-color:var(--coral-mid);background:var(--coral-lt);color:var(--coral-dk);pointer-events:none;}
+footer{text-align:center;padding:2rem;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:3rem;}
+body.present footer{font-size:14px;}
+
+/* ── PRESENTATION SCENARIO BANNER ── */
+body.present .scenario-banner{background:var(--purple-lt);border:1.5px solid var(--purple-mid);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1rem;}
+body.present .scenario-banner p{font-size:18px;color:var(--purple-dk);line-height:1.65;}
+.scenario-banner{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:var(--card-pad);margin-bottom:10px;}
+.scenario-banner p{font-size:var(--scenario-size);color:var(--text);line-height:1.6;}
+
+@media(max-width:640px){
+  .type-grid,.card-grid{grid-template-columns:1fr;}
+  header{flex-direction:column;align-items:flex-start;}
+  .tab-btn{padding:9px 12px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <span class="hdr-badge">STAT C1000</span>
+    <div>
+      <h1>Hypothesis Testing — Practice Tool</h1>
+      <p>Santa Ana College &nbsp;·&nbsp; Learn · Practice · Conclusions · Reference</p>
+    </div>
+  </div>
+  <button class="present-toggle" id="pres-btn" onclick="togglePresent()">
+    <span class="toggle-icon">⛶</span>
+    <span id="pres-label">Presentation mode</span>
+  </button>
+</header>
+
+<div class="container">
+  <div class="tab-bar">
+    <button class="tab-btn on"  onclick="goTab('learn')">Learn</button>
+    <button class="tab-btn"     onclick="goTab('practice')">Practice</button>
+    <button class="tab-btn"     onclick="goTab('conclusions')">Conclusions</button>
+    <button class="tab-btn"     onclick="goTab('reference')">Reference</button>
+  </div>
+
+  <!-- ══ LEARN ════════════════════════════════════════════════════════════ -->
+  <div id="s-learn" class="sec on">
+    <p class="intro">Select a hypothesis test type to see when to use it, the test statistic formula, conditions, and a fully worked 5-step example.</p>
+    <div class="type-grid">
+      <button class="type-card" id="lb-prop" onclick="learnShow('prop')">
+        <div class="tc-label">Testing a proportion</div>
+        <div class="tc-title">1-proportion Z test</div>
+        <div class="tc-sub z">z distribution · categorical data · p</div>
+      </button>
+      <button class="type-card" id="lb-tmean" onclick="learnShow('tmean')">
+        <div class="tc-label">Testing a mean</div>
+        <div class="tc-title">1-sample T test</div>
+        <div class="tc-sub t">t distribution · quantitative data · μ</div>
+      </button>
+    </div>
+    <div id="learn-body"></div>
+  </div>
+
+  <!-- ══ PRACTICE ═════════════════════════════════════════════════════════ -->
+  <div id="s-practice" class="sec">
+    <p class="intro">Read the scenario. Identify the correct test type, then work through the 4-step solution one step at a time.</p>
+    <div class="nav-row">
+      <span id="pcount">Problem 1 of 5</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-nav" onclick="pNav(-1)">← Prev</button>
+        <button class="btn btn-nav" onclick="pNav(1)">Next →</button>
+      </div>
+    </div>
+    <div id="prac-body"></div>
+  </div>
+
+  <!-- ══ CONCLUSIONS ══════════════════════════════════════════════════════ -->
+  <div id="s-conclusions" class="sec">
+    <p class="intro">Use the decision rule to make a conclusion, then choose the best conclusion statement.</p>
+    <div class="card-grid" style="margin-bottom:1.25rem;">
+      <div class="reject-box">
+        <div style="font-weight:700;margin-bottom:5px;">p-value ≤ α &nbsp;→&nbsp; Reject H₀</div>
+        <div>Result is unusually extreme. There is <strong>sufficient evidence</strong> to support Hₐ.</div>
+      </div>
+      <div class="ftr-box">
+        <div style="font-weight:700;margin-bottom:5px;">p-value &gt; α &nbsp;→&nbsp; Fail to reject H₀</div>
+        <div>Result is not unusual. There is <strong>insufficient evidence</strong> to support Hₐ.</div>
+      </div>
+    </div>
+    <div class="card accent-p" style="margin-bottom:1.25rem;">
+      <span class="card-label">Conclusion sentence template</span>
+      <p style="font-size:var(--step-font);line-height:1.65;margin-bottom:6px;"><strong>Reject:</strong>&nbsp; "There is sufficient evidence to support the claim that [Hₐ in context]."</p>
+      <p style="font-size:var(--step-font);line-height:1.65;"><strong>Fail to reject:</strong>&nbsp; "There is not sufficient evidence to support the claim that [Hₐ in context]."</p>
+    </div>
+    <div class="nav-row" style="margin-top:1.5rem;">
+      <span id="ccount">Problem 1 of 5</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-nav" onclick="cNav(-1)">← Prev</button>
+        <button class="btn btn-nav" onclick="cNav(1)">Next →</button>
+      </div>
+    </div>
+    <div id="conc-body"></div>
+  </div>
+
+  <!-- ══ REFERENCE ════════════════════════════════════════════════════════ -->
+  <div id="s-reference" class="sec">
+    <p class="intro">Quick-reference summary of both hypothesis tests — formulas, conditions, the 4-step process, and tail directions.</p>
+    <div class="card-grid" style="margin-bottom:1rem;">
+      <div class="card accent-z">
+        <span class="card-label">1-Proportion Z test</span>
+        <div style="font-size:var(--step-font);color:var(--text-muted);margin-bottom:8px;">Use for: categorical data (yes/no), testing <strong>p</strong></div>
+        <div class="formula-box" style="color:var(--teal);">z = (p̂ − p₀) / √(p₀q₀ / n)</div>
+        <ul class="cond-list" style="margin-top:8px;">
+          <li><span class="dot dot-z"></span><span>Independent: n ≤ 5% of population</span></li>
+          <li><span class="dot dot-z"></span><span>Random sample</span></li>
+          <li><span class="dot dot-z"></span><span>np₀ ≥ 10  AND  nq₀ ≥ 10</span></li>
+        </ul>
+      </div>
+      <div class="card accent-t">
+        <span class="card-label">1-Sample T test</span>
+        <div style="font-size:var(--step-font);color:var(--text-muted);margin-bottom:8px;">Use for: quantitative data, testing <strong>μ</strong> (σ unknown)</div>
+        <div class="formula-box" style="color:var(--blue);">t = (x̄ − μ₀) / (s / √n)</div>
+        <ul class="cond-list" style="margin-top:8px;">
+          <li><span class="dot dot-t"></span><span>Independent: n ≤ 5% of population</span></li>
+          <li><span class="dot dot-t"></span><span>Random sample</span></li>
+          <li><span class="dot dot-t"></span><span>n &gt; 30  OR  approximately normal population</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1rem;">
+      <span class="card-label">The 4-step process (both tests)</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-top:6px;">
+        <div style="background:var(--bg);border-radius:var(--radius);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Step 1</div>
+          <div style="font-size:var(--step-font);font-weight:600;">State parameter &amp; hypotheses</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Define μ or p in context. H₀ uses =. Hₐ uses &lt;, &gt;, or ≠.</div>
+        </div>
+        <div style="background:var(--bg);border-radius:var(--radius);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Step 2</div>
+          <div style="font-size:var(--step-font);font-weight:600;">Name the test</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">1-Proportion Z Test or 1-Sample T Test. State α.</div>
+        </div>
+        <div style="background:var(--bg);border-radius:var(--radius);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Step 3</div>
+          <div style="font-size:var(--step-font);font-weight:600;">Calculate &amp; find p-value</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Compute the test statistic. Tail from Hₐ.</div>
+        </div>
+        <div style="background:var(--bg);border-radius:var(--radius);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Step 4</div>
+          <div style="font-size:var(--step-font);font-weight:600;">Write the conclusion</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Compare p-value to α. Reject or fail to reject. State in context.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="card-label">Tail direction — reading Hₐ</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:6px;">
+        <div style="background:var(--teal-lt);border-radius:var(--radius);padding:12px;border:1px solid var(--teal-mid);">
+          <div style="font-size:var(--step-font);font-weight:700;color:var(--teal-dk);margin-bottom:4px;">Hₐ: param &lt; value</div>
+          <div style="font-size:12px;color:var(--teal-dk);">Left-tailed · use lower tail p-value</div>
+        </div>
+        <div style="background:var(--blue-lt);border-radius:var(--radius);padding:12px;border:1px solid var(--blue-mid);">
+          <div style="font-size:var(--step-font);font-weight:700;color:var(--blue-dk);margin-bottom:4px;">Hₐ: param &gt; value</div>
+          <div style="font-size:12px;color:var(--blue-dk);">Right-tailed · use upper tail p-value</div>
+        </div>
+        <div style="background:var(--purple-lt);border-radius:var(--radius);padding:12px;border:1px solid var(--purple-mid);">
+          <div style="font-size:var(--step-font);font-weight:700;color:var(--purple-dk);margin-bottom:4px;">Hₐ: param ≠ value</div>
+          <div style="font-size:12px;color:var(--purple-dk);">Two-tailed · double the one-tail p-value</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>STAT C1000 &nbsp;·&nbsp; Santa Ana College &nbsp;·&nbsp; Hypothesis Testing Practice Tool</footer>
+
+<script>
+// ──────────────────────── PRESENTATION TOGGLE ──────────────────────────────
+let isPresent = false;
+function togglePresent() {
+  isPresent = !isPresent;
+  document.body.classList.toggle('present', isPresent);
+  const btn = document.getElementById('pres-btn');
+  const lbl = document.getElementById('pres-label');
+  btn.classList.toggle('active', isPresent);
+  lbl.textContent = isPresent ? 'Exit presentation' : 'Presentation mode';
+  if (isPresent && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else if (!isPresent && document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isPresent) {
+    isPresent = false;
+    document.body.classList.remove('present');
+    document.getElementById('pres-btn').classList.remove('active');
+    document.getElementById('pres-label').textContent = 'Presentation mode';
+  }
+});
+
+// ──────────────────────── DATA ──────────────────────────────────────────────
+const LD = {
+  prop: {
+    when: 'The research question tests a <strong>proportion, percentage, or rate</strong> — a yes/no categorical outcome. We use the <strong>z distribution</strong> for the test statistic.',
+    formula: 'z = (p̂ − p₀) / √(p₀q₀ / n)',
+    fnote: 'p̂ = sample proportion · p₀ = null value · q₀ = 1 − p₀ · n = sample size',
+    conds: ['Independent: n ≤ 5% of the population', 'Random or representative sample', 'np₀ ≥ 10  AND  nq₀ ≥ 10 (use p₀, not p̂)'],
+    scenario: 'In 2005, 60% of graduates felt prepared to manage their own finances. In 2015, out of 500 randomly selected graduates, 327 said they feel prepared. Is there evidence the proportion has changed? Use α = 0.05.',
+    steps: [
+      { label: 'Step 1 — State parameter & hypotheses', txt: 'p = the proportion of high school graduates who feel\n    prepared to manage their own finances (in 2015)\n\nH₀: p = 0.60   (the proportion has not changed)\nHₐ: p ≠ 0.60   (the proportion has changed)\n\nTwo-tailed because we are testing whether it "changed" —\nnot specifically increased or decreased.' },
+      { label: 'Step 2 — Name the test', txt: '1-Proportion Z Test\n\n• Categorical data (prepared: yes/no)\n• Using the z (normal) distribution\n• Significance level: α = 0.05' },
+      { label: 'Step 3 — Test statistic & p-value', txt: 'p̂ = 327/500 = 0.654   p₀ = 0.60   q₀ = 0.40   n = 500\n\nz = (0.654 − 0.60) / √((0.60)(0.40)/500)\n  = 0.054 / 0.02191\n  ≈ 2.46\n\nTwo-tailed p-value = 2 × P(Z > 2.46)\n                   = 2 × 0.00695\n                   ≈ 0.0139' },
+      { label: 'Step 4 — Conclusion', txt: 'p-value (0.0139) < α (0.05) → Reject H₀\n\nConclusion: There is sufficient evidence to show that\nthe proportion of graduates who feel prepared to manage\ntheir own finances has changed since 2005.' },
+      { label: 'Step 5 — Evaluate statistical practices', txt: 'Independence: 500 < 5% of all U.S. high school graduates ✓\nRandom: "randomly selected" ✓\nCLT:  np₀ = 300 ≥ 10  and  nq₀ = 200 ≥ 10 ✓\n\nAll conditions satisfied — the test is valid.' }
+    ]
+  },
+  tmean: {
+    when: 'The research question tests a <strong>mean (average)</strong> of quantitative data, and the population standard deviation σ is unknown. We use the <strong>t distribution</strong> with df = n − 1.',
+    formula: 't = (x̄ − μ₀) / (s / √n)',
+    fnote: 'x̄ = sample mean · μ₀ = null value · s = sample SD · df = n − 1',
+    conds: ['Independent: n ≤ 5% of the population', 'Random or representative sample', 'n > 30  OR  population is approximately normal'],
+    scenario: 'An insurance company knows last year\'s mean policyholder life expectancy was 77 years. A random sample of 20 paid policies shows x̄ = 81.7 years and s = 12.7 years. Is there evidence policyholders are living longer? Use α = 0.05.',
+    steps: [
+      { label: 'Step 1 — State parameter & hypotheses', txt: 'μ = mean life expectancy (years) of policyholders this year\n\nH₀: μ = 77   (mean has not changed)\nHₐ: μ > 77   (mean has increased)\n\nRight-tailed because the company asks if policyholders\nare living longer.' },
+      { label: 'Step 2 — Name the test', txt: '1-Sample T Test\n\n• Quantitative data (years of life)\n• σ unknown; we have s = 12.7\n• df = 20 − 1 = 19\n• Significance level: α = 0.05' },
+      { label: 'Step 3 — Test statistic & p-value', txt: 'x̄ = 81.7   μ₀ = 77   s = 12.7   n = 20   df = 19\n\nt = (81.7 − 77) / (12.7 / √20)\n  = 4.7 / 2.840\n  ≈ 1.5983\n\nRight-tailed p-value = P(t₁₉ > 1.5983) ≈ 0.0632' },
+      { label: 'Step 4 — Conclusion', txt: 'p-value (0.0632) > α (0.05) → Fail to reject H₀\n\nConclusion: There is insufficient evidence to show that\nthe mean life expectancy of policyholders has increased\nabove 77 years.' },
+      { label: 'Step 5 — Evaluate statistical practices', txt: 'Independence: 20 < 5% of all policyholders ✓\nRandom: representative sample of paid policies ✓\nNormality: n = 20 < 30, but life expectancy is\n           approximately normal ✓\n\nAll conditions satisfied — the test is valid.' }
+    ]
+  }
+};
+
+const PP = [
+  { ctx: 'A hospital claims the average ER wait time is 45 minutes. A patient advocacy group randomly samples 55 ER visits and finds a mean wait time of 51.3 minutes with s = 18.4 minutes. Is there evidence the mean wait time is greater than 45 minutes? Use α = 0.05.', ans: 'tmean', hint: 'We are asked about a <em>mean wait time</em> in minutes — quantitative data with a sample SD. Use the 1-Sample T Test.', steps: [
+    { label: 'Step 1 — Parameter & hypotheses', txt: 'μ = mean ER wait time (minutes) at this hospital\n\nH₀: μ = 45\nHₐ: μ > 45   (right-tailed)' },
+    { label: 'Step 2 — Name the test', txt: '1-Sample T Test\n• Quantitative data · σ unknown · df = 54 · α = 0.05' },
+    { label: 'Step 3 — Test statistic & p-value', txt: 't = (51.3 − 45) / (18.4/√55) = 6.3 / 2.481 ≈ 2.540\n\np-value = P(t₅₄ > 2.540) ≈ 0.0071' },
+    { label: 'Step 4 — Conclusion', txt: 'p-value (0.0071) < α (0.05) → Reject H₀\n\nThere is sufficient evidence to support the claim\nthat the mean ER wait time is greater than 45 minutes.' }
+  ]},
+  { ctx: 'The CA Department of Justice reported 62% of parolees complete parole without re-arrest. A new rehabilitation program tracked 180 parolees; 124 completed without re-arrest. Is there evidence the program\'s success rate differs from 62%? Use α = 0.05.', ans: 'prop', hint: 'We are testing whether a <em>proportion</em> (success rate) differs from a claimed value. Categorical outcome → 1-Proportion Z Test.', steps: [
+    { label: 'Step 1 — Parameter & hypotheses', txt: 'p = proportion of program parolees completing parole\n    without re-arrest\n\nH₀: p = 0.62\nHₐ: p ≠ 0.62   (two-tailed — "differs from")' },
+    { label: 'Step 2 — Name the test', txt: '1-Proportion Z Test\n• Categorical data · testing a proportion · α = 0.05' },
+    { label: 'Step 3 — Test statistic & p-value', txt: 'p̂ = 124/180 = 0.689   p₀ = 0.62   n = 180\n\nz = (0.689 − 0.62) / √((0.62)(0.38)/180)\n  = 0.069 / 0.03617 ≈ 1.907\n\np-value = 2 × P(Z > 1.907) ≈ 0.0566' },
+    { label: 'Step 4 — Conclusion', txt: 'p-value (0.0566) > α (0.05) → Fail to reject H₀\n\nThere is insufficient evidence to conclude the program\'s\ncompletion rate differs from 62%.' }
+  ]},
+  { ctx: 'A nursing instructor claims students study 20 hours per week. A random sample of 32 nursing students reports a mean of 22.8 hours with s = 6.2 hours. Is there evidence the true mean is greater than 20 hours? Use α = 0.01.', ans: 'tmean', hint: 'The question asks about a <em>mean</em> (average hours) — quantitative data, σ unknown → 1-Sample T Test.', steps: [
+    { label: 'Step 1 — Parameter & hypotheses', txt: 'μ = mean weekly study hours for nursing students\n\nH₀: μ = 20\nHₐ: μ > 20   (right-tailed)' },
+    { label: 'Step 2 — Name the test', txt: '1-Sample T Test\n• Quantitative data · σ unknown · df = 31 · α = 0.01' },
+    { label: 'Step 3 — Test statistic & p-value', txt: 't = (22.8 − 20) / (6.2/√32) = 2.8 / 1.096 ≈ 2.554\n\np-value = P(t₃₁ > 2.554) ≈ 0.0079' },
+    { label: 'Step 4 — Conclusion', txt: 'p-value (0.0079) < α (0.01) → Reject H₀\n\nThere is sufficient evidence that nursing students study\nmore than 20 hours per week on average.' }
+  ]},
+  { ctx: 'The CDC reports 18% of U.S. adults smoke. In a random sample of 400 Santa Ana adults, 58 reported smoking. Is there evidence the local smoking rate is less than the national rate? Use α = 0.05.', ans: 'prop', hint: 'We are testing whether a <em>proportion</em> of smokers is less than a national benchmark. Categorical outcome → 1-Proportion Z Test.', steps: [
+    { label: 'Step 1 — Parameter & hypotheses', txt: 'p = proportion of Santa Ana adults who smoke\n\nH₀: p = 0.18\nHₐ: p < 0.18   (left-tailed)' },
+    { label: 'Step 2 — Name the test', txt: '1-Proportion Z Test\n• Categorical data · testing a proportion · α = 0.05' },
+    { label: 'Step 3 — Test statistic & p-value', txt: 'p̂ = 58/400 = 0.145   p₀ = 0.18   n = 400\n\nz = (0.145 − 0.18) / √((0.18)(0.82)/400)\n  = −0.035 / 0.01921 ≈ −1.822\n\np-value = P(Z < −1.822) ≈ 0.0343' },
+    { label: 'Step 4 — Conclusion', txt: 'p-value (0.0343) < α (0.05) → Reject H₀\n\nThere is sufficient evidence that the smoking rate in\nSanta Ana is less than the national rate of 18%.' }
+  ]},
+  { ctx: 'A researcher claims night-shift officers sleep 6 hours per night on average. A sample of 28 night-shift officers shows a mean of 5.4 hours with s = 1.3 hours (approximately normal distribution). Is there evidence the mean is less than 6 hours? Use α = 0.01.', ans: 'tmean', hint: 'We are testing a <em>mean</em> number of hours — quantitative, σ unknown. n < 30 but the population is approximately normal, so T test conditions are met.', steps: [
+    { label: 'Step 1 — Parameter & hypotheses', txt: 'μ = mean nightly sleep hours for night-shift officers\n\nH₀: μ = 6\nHₐ: μ < 6   (left-tailed)' },
+    { label: 'Step 2 — Name the test', txt: '1-Sample T Test\n• Quantitative data · σ unknown · n = 28 (≈ normal) · df = 27 · α = 0.01' },
+    { label: 'Step 3 — Test statistic & p-value', txt: 't = (5.4 − 6) / (1.3/√28) = −0.6 / 0.2456 ≈ −2.443\n\np-value = P(t₂₇ < −2.443) ≈ 0.0106' },
+    { label: 'Step 4 — Conclusion', txt: 'p-value (0.0106) > α (0.01) → Fail to reject H₀\n\nThere is insufficient evidence that night-shift officers\nsleep less than 6 hours per night (at α = 0.01).' }
+  ]}
+];
+
+const CP = [
+  { setup: 'A health study tests whether more than 30% of adults in a city get the recommended 150 minutes of exercise per week.', hyp: 'H₀: p = 0.30\nHₐ: p > 0.30  (right-tailed)', stats: 'Sample: n = 220 &nbsp;·&nbsp; z = 1.84 &nbsp;·&nbsp; p-value = 0.0329 &nbsp;·&nbsp; α = 0.05', opts: ['There is sufficient evidence to support the claim that more than 30% of adults get the recommended exercise.','There is insufficient evidence to support the claim that more than 30% of adults get the recommended exercise.','There is sufficient evidence to reject the claim that more than 30% of adults get the recommended exercise.','We accept the null hypothesis that exactly 30% of adults get the recommended exercise.'], ans: 0, explain: 'p-value (0.0329) ≤ α (0.05) → Reject H₀. The result is unusually extreme, so we have sufficient evidence for Hₐ. Option 2 says "insufficient" — wrong. Option 3 misuses language (we support Hₐ, not "reject Hₐ\'s claim"). Option 4 uses "accept H₀" — we never accept the null.' },
+  { setup: 'A criminal justice researcher tests whether the mean sentence length for first-time drug offenders is less than 36 months.', hyp: 'H₀: μ = 36\nHₐ: μ < 36  (left-tailed)', stats: 'Sample: n = 40 &nbsp;·&nbsp; t = −1.23 &nbsp;·&nbsp; p-value = 0.1127 &nbsp;·&nbsp; α = 0.05', opts: ['There is sufficient evidence to support the claim that the mean sentence length is less than 36 months.','There is not sufficient evidence to support the claim that the mean sentence length is less than 36 months.','We accept the null hypothesis that mean sentence length equals 36 months.','There is sufficient evidence to reject the null hypothesis.'], ans: 1, explain: 'p-value (0.1127) > α (0.05) → Fail to reject H₀. We do NOT have sufficient evidence for Hₐ. Option 1 incorrectly says "sufficient." Option 3 uses forbidden "accept H₀" language. Option 4 contradicts our decision — we are not rejecting H₀.' },
+  { setup: 'A nursing study tests whether the proportion of patients readmitted within 30 days differs from the national benchmark of 15%.', hyp: 'H₀: p = 0.15\nHₐ: p ≠ 0.15  (two-tailed)', stats: 'Sample: n = 312 &nbsp;·&nbsp; z = −2.61 &nbsp;·&nbsp; p-value = 0.0091 &nbsp;·&nbsp; α = 0.01', opts: ['There is sufficient evidence to support the claim that the readmission rate differs from 15%.','There is not sufficient evidence to support the claim that the readmission rate differs from 15%.','There is sufficient evidence to support the claim that the readmission rate is less than 15%.','We cannot make a conclusion because this is a two-tailed test.'], ans: 0, explain: 'p-value (0.0091) ≤ α (0.01) → Reject H₀. There IS sufficient evidence for Hₐ (the rate differs). Option 2 is wrong. Option 3 over-specifies the direction — Hₐ says "differs" (≠), not "less than." Option 4 is false — two-tailed tests still yield conclusions.' },
+  { setup: 'A researcher tests whether the mean GPA of SAC students is greater than 2.8.', hyp: 'H₀: μ = 2.8\nHₐ: μ > 2.8  (right-tailed)', stats: 'Sample: n = 75 &nbsp;·&nbsp; t = 1.19 &nbsp;·&nbsp; p-value = 0.1188 &nbsp;·&nbsp; α = 0.05', opts: ['There is sufficient evidence to support the claim that the mean GPA is greater than 2.8.','There is not sufficient sample evidence to support the claim that the mean GPA is greater than 2.8.','There is sufficient evidence to warrant rejection of the claim that mean GPA equals 2.8.','We accept the alternative hypothesis. The mean GPA is greater than 2.8.'], ans: 1, explain: 'p-value (0.1188) > α (0.05) → Fail to reject H₀. We do not have sufficient evidence for Hₐ. Option 1 incorrectly says "sufficient." Option 3 contradicts our decision. Option 4 uses "accept the alternative" — never valid language.' },
+  { setup: 'A public health official tests whether fewer than 20% of teens in a county have been vaccinated for meningitis.', hyp: 'H₀: p = 0.20\nHₐ: p < 0.20  (left-tailed)', stats: 'Sample: n = 500 &nbsp;·&nbsp; z = −3.18 &nbsp;·&nbsp; p-value = 0.0007 &nbsp;·&nbsp; α = 0.01', opts: ['There is not sufficient evidence to support the claim that fewer than 20% of teens are vaccinated.','There is sufficient evidence to support the claim that fewer than 20% of teens in this county are vaccinated for meningitis.','We accept the null hypothesis. The vaccination rate is 20%.','There is sufficient evidence to warrant rejection of the claim that fewer than 20% of teens are vaccinated.'], ans: 1, explain: 'p-value (0.0007) ≤ α (0.01) → Reject H₀. Evidence IS sufficient for Hₐ. Option 1 says "not sufficient" — wrong. Option 3 uses "accept H₀." Option 4 misdirects — it sounds like we are rejecting the alternative, which is the opposite of what happened.' }
+];
+
+// ──────────────────────── TABS ──────────────────────────────────────────────
+const TABS = ['learn','practice','conclusions','reference'];
+function goTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('on', TABS[i] === t));
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-' + t).classList.add('on');
+}
+
+// ──────────────────────── LEARN ─────────────────────────────────────────────
+let lType = null, lStep = 0;
+function learnShow(t) {
+  lType = t; lStep = 0;
+  const d = LD[t], isZ = t === 'prop';
+  const ac = isZ ? 'var(--teal)' : 'var(--blue)', dc = isZ ? 'dot-z' : 'dot-t';
+  document.getElementById('lb-prop').className  = 'type-card' + (t === 'prop'  ? ' sel-z' : '');
+  document.getElementById('lb-tmean').className = 'type-card' + (t === 'tmean' ? ' sel-t' : '');
+  const conds = d.conds.map(c => `<li><span class="dot ${dc}"></span><span>${c}</span></li>`).join('');
+  document.getElementById('learn-body').innerHTML = `
+    <div class="card ${isZ ? 'accent-z' : 'accent-t'}" style="margin-bottom:8px;">
+      <span class="card-label">When to use it</span>
+      <p style="font-size:var(--step-font);color:var(--text);line-height:1.55;">${d.when}</p>
+    </div>
+    <div class="card-grid" style="margin-bottom:8px;">
+      <div class="card">
+        <span class="card-label">Test statistic formula</span>
+        <div class="formula-box" style="color:${ac};">${d.formula}</div>
+        <p style="font-size:12px;color:var(--text-muted);">${d.fnote}</p>
+      </div>
+      <div class="card">
+        <span class="card-label">Conditions — verify all 3</span>
+        <ul class="cond-list">${conds}</ul>
+      </div>
+    </div>
+    <div style="margin-top:1.25rem;">
+      <p style="font-size:var(--step-font);font-weight:600;color:var(--text);margin-bottom:8px;">Worked 5-step example</p>
+      <div class="scenario-banner"><p>${d.scenario}</p></div>
+      <div id="lsteps"></div>
+      <button class="btn" id="lsbtn" onclick="lNext()" style="margin-top:10px;">Show step 1 of 5</button>
+    </div>`;
+}
+function lNext() {
+  const d = LD[lType]; if (lStep >= d.steps.length) return;
+  const s = d.steps[lStep], isZ = lType === 'prop';
+  const sc = isZ ? 'step-z' : 'step-t', bc = isZ ? 'badge-z' : 'badge-t';
+  const div = document.createElement('div');
+  div.className = `step-card ${sc}`;
+  div.innerHTML = `<div class="step-head"><span class="step-badge ${bc}">${lStep + 1}</span><span class="step-name">${s.label}</span></div><pre class="work">${s.txt}</pre>`;
+  document.getElementById('lsteps').appendChild(div);
+  lStep++;
+  const btn = document.getElementById('lsbtn');
+  if (lStep < d.steps.length) { btn.textContent = `Show step ${lStep + 1} of 5`; }
+  else { btn.textContent = 'All 5 steps shown'; btn.disabled = true; }
+}
+
+// ──────────────────────── PRACTICE ──────────────────────────────────────────
+let curP = 0;
+const PS = PP.map(() => ({ ans: false, ok: false, shown: 0 }));
+function renderP() {
+  document.getElementById('pcount').textContent = `Problem ${curP + 1} of ${PP.length}`;
+  const p = PP[curP], ps = PS[curP], isZ = p.ans === 'prop';
+  const sc = isZ ? 'step-z' : 'step-t', bc = isZ ? 'badge-z' : 'badge-t';
+  let shtml = '';
+  if (ps.ok) {
+    for (let i = 0; i < ps.shown; i++) {
+      const s = p.steps[i];
+      shtml += `<div class="step-card ${sc}"><div class="step-head"><span class="step-badge ${bc}">${i+1}</span><span class="step-name">${s.label}</span></div><pre class="work">${s.txt}</pre></div>`;
+    }
+  }
+  let ahtml = '';
+  if (!ps.ans) {
+    ahtml = `<div class="btn-row"><button class="btn choice" onclick="chk('prop')">1-proportion Z test</button><button class="btn choice" onclick="chk('tmean')">1-sample T test</button></div>`;
+  } else if (!ps.ok) {
+    ahtml = `<div class="alert alert-hint" style="margin-top:1rem;"><strong>Not quite.</strong> ${p.hint}</div><div class="btn-row"><button class="btn choice" onclick="chk('prop')">1-proportion Z test</button><button class="btn choice" onclick="chk('tmean')">1-sample T test</button></div>`;
+  } else {
+    const more = ps.shown < p.steps.length;
+    const sb = more
+      ? `<button class="btn" onclick="pStep()" style="margin-top:10px;">Show step ${ps.shown + 1} of 4</button>`
+      : `<button class="btn" style="margin-top:10px;" disabled>All 4 steps shown</button>`;
+    ahtml = `<div class="alert alert-ok" style="margin-top:1rem;">Correct! This calls for the <strong>${isZ ? '1-Proportion Z Test' : '1-Sample T Test'}</strong>.</div>${shtml}${sb}`;
+  }
+  document.getElementById('prac-body').innerHTML = `<div class="scenario-banner"><p>${p.ctx}</p></div>${ahtml}`;
+}
+function chk(c) { const ps = PS[curP]; if (ps.ok) return; ps.ans = true; ps.ok = (c === PP[curP].ans); renderP(); }
+function pStep() { const ps = PS[curP]; if (ps.shown < PP[curP].steps.length) { ps.shown++; renderP(); } }
+function pNav(d) { curP = Math.max(0, Math.min(PP.length - 1, curP + d)); renderP(); }
+
+// ──────────────────────── CONCLUSIONS ───────────────────────────────────────
+let curC = 0;
+const CS = CP.map(() => ({ chosen: null }));
+function renderC() {
+  document.getElementById('ccount').textContent = `Problem ${curC + 1} of ${CP.length}`;
+  const p = CP[curC], ps = CS[curC];
+  const optHtml = p.opts.map((o, i) => {
+    let cls = 'conc-opt';
+    if (ps.chosen !== null) { cls += (i === p.ans ? ' right' : ps.chosen === i ? ' wrong' : ''); }
+    return `<button class="${cls}" onclick="pickConc(${i})">${o}</button>`;
+  }).join('');
+  const expHtml = ps.chosen !== null
+    ? `<div class="alert ${ps.chosen === p.ans ? 'alert-ok' : 'alert-hint'}" style="margin-top:10px;"><strong>${ps.chosen === p.ans ? 'Correct!' : 'Not quite.'}</strong> ${p.explain}</div>`
+    : '';
+  document.getElementById('conc-body').innerHTML = `
+    <div class="card">
+      <p style="font-size:var(--step-font);color:var(--text);line-height:1.6;margin-bottom:10px;">${p.setup}</p>
+      <div class="hyp-box" style="margin-bottom:10px;">${p.hyp.replace(/\n/g,'<br>')}</div>
+      <div class="alert alert-info" style="margin:0;">${p.stats}</div>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin:10px 0 6px;">Choose the best conclusion statement:</p>
+    ${optHtml}
+    ${expHtml}`;
+}
+function pickConc(i) { if (CS[curC].chosen !== null) return; CS[curC].chosen = i; renderC(); }
+function cNav(d) { curC = Math.max(0, Math.min(CP.length - 1, curC + d)); renderC(); }
+
+// ──────────────────────── INIT ───────────────────────────────────────────────
+renderP(); renderC();
+</script>
+</body>
+</html>
